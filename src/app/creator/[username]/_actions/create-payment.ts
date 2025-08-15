@@ -1,11 +1,110 @@
 "use server"
 
 import { prisma } from "@/lib/prisma"
+import { stripe } from "@/lib/stripe"
 import { z } from "zod"
 
+
 const createUsernameSchema = z.object({
+    slug: z.string().min(1, "Slug do creator é obrogatório"),
+    name: z.string().min(1, "O nome precisa ter no minimo 1 letra"),
+    message: z.string().min(5, "O nome precisa ter no minimo 5 letras"),
+    price: z.number().min(1500, "Selecione um valor maior que R$15"),
+    creatorId: z.string()
+
 })
 
-export async function createPayment() {
+type createPaymentSchema = z.infer<typeof createUsernameSchema>
+
+export async function createPayment(data: createPaymentSchema) {
+
+
+    const schema = createUsernameSchema.safeParse(data)
+
+    if (!schema.success) {
+        return {
+            data: null,
+            error: schema.error.issues[0].message
+        }
+    }
+
+    if (!data.creatorId) {
+        return {
+            data: null,
+            error: "Creator não encontrado"
+        }
+    }
+
+    try {
+        const creator = await prisma.user.findFirst({
+            where: {
+                connectedStripeAccountId: data.creatorId
+            }
+        })
+
+        if (!creator) {
+            return {
+                data: null,
+                error: "Falha ao criar pagamento, tente mais tarde"
+            }
+        }
+
+        const applicationFeeAmount = Math.floor(data.price * 0.1)
+
+        const donation = await prisma.donation.create({
+            data: {
+                donorName: data.name,
+                donorMessage: data.message,
+                userId: creator.id,
+                status: "PENDING",
+                amount: (data.price - applicationFeeAmount)
+            }
+        })
+
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ["card"],
+            mode: "payment",
+            success_url: `${process.env.HOST_URL}/creator/${data.slug}`,
+            cancel_url: `${process.env.HOST_URL}/creator/${data.slug}`,
+            line_items: [
+                {
+                    price_data: {
+                        currency: "brl",
+                        product_data: {
+                            name: "Apoiar " + creator.name
+                        },
+                        unit_amount: data.price,
+                    },
+                    quantity: 1,
+                }
+            ],
+            payment_intent_data: {
+                application_fee_amount: applicationFeeAmount,
+                transfer_data: {
+                    destination: creator.connectedStripeAccountId as string
+                },
+                metadata: {
+                    donorName: data.name,
+                    donorMessage: data.message,
+                    donationId: donation.id,
+                }
+            }
+        })
+      
+
+        return {
+            data: JSON.stringify(session),
+            error: null,
+        }
+
+        
+
+    } catch (err) {
+        console.error("errp prisma ou stripe", err)
+        return {
+            data: null,
+            error: "Falha ao criar o pagamento tente mais tarde.."
+        }
+    }
 
 }
