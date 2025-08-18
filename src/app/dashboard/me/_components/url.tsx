@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { createUsername } from "../_actions/create-username";
 import { useState } from "react";
 import Link from "next/link";
-import { Link2 } from "lucide-react";
+import { Link2, User } from "lucide-react";
 
 interface UrlPreviewProps {
     username: string | null
@@ -40,7 +40,7 @@ export function UrlPreview({ username: slug }: UrlPreviewProps) {
             <div className="flex items-center flex-1 p-2 justify-between text-gray-100">
                 <div className="flex flex-col items-start md:flex-row md:items-center justify-center gap-2">
                     <h3 className="font-bold text-lg">Sua ULR:</h3>
-                    <Link href={`${process.env.NEXT_PUBLIC_HOST_URL}/creator/{username}`}
+                    <Link href={`${process.env.NEXT_PUBLIC_HOST_URL}/creator/${username}`}
                         target="_blank"
 
                         className="w-fit h-9 rounded-md flex items-center font-semibold text-white"
@@ -49,7 +49,7 @@ export function UrlPreview({ username: slug }: UrlPreviewProps) {
                     </Link>
                 </div>
                 <Link
-                    href={`${process.env.NEXT_PUBLIC_HOST_URL}/creator/{username}`}
+                    href={`${process.env.NEXT_PUBLIC_HOST_URL}/creator/${username}`}
                     target="_blank"
                     className="bg-blue-500 px-4 py-1 rounded-md hidden md:block"
                 >

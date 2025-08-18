@@ -26,7 +26,7 @@ export default async function Dashboard() {
                     {accountUrl && (
                         <a
                             className="bg-zinc-900 px-4 py-1 rounded-md text-white cursor-pointer"
-                            href={accountUrl}>Ajusta conta</a>
+                            href={accountUrl}>Ajustar conta</a>
                     )}
                 </div>
             </section>

@@ -8,7 +8,7 @@ import { z } from "zod"
 const createUsernameSchema = z.object({
     slug: z.string().min(1, "Slug do creator é obrogatório"),
     name: z.string().min(1, "O nome precisa ter no minimo 1 letra"),
-    message: z.string().min(5, "O nome precisa ter no minimo 5 letras"),
+    message: z.string().min(5, "A mensagem precisa ter no minimo 5 letras"),
     price: z.number().min(1500, "Selecione um valor maior que R$15"),
     creatorId: z.string()
 
@@ -23,14 +23,12 @@ export async function createPayment(data: createPaymentSchema) {
 
     if (!schema.success) {
         return {
-            data: null,
             error: schema.error.issues[0].message
         }
     }
 
     if (!data.creatorId) {
         return {
-            data: null,
             error: "Creator não encontrado"
         }
     }
@@ -44,7 +42,6 @@ export async function createPayment(data: createPaymentSchema) {
 
         if (!creator) {
             return {
-                data: null,
                 error: "Falha ao criar pagamento, tente mais tarde"
             }
         }
@@ -93,17 +90,15 @@ export async function createPayment(data: createPaymentSchema) {
       
 
         return {
-            data: JSON.stringify(session),
-            error: null,
+            sessionId: session.id,
         }
 
         
 
     } catch (err) {
-        console.error("errp prisma ou stripe", err)
+        console.log("Erro ao criar pagamento", err)
         return {
-            data: null,
-            error: "Falha ao criar o pagamento tente mais tarde.."
+            error: "Falha ao criar o pagamento tente mais tarde"
         }
     }
 
